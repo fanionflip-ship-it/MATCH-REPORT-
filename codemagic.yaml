@@ -1,0 +1,28 @@
+workflows:
+  android-debug-build:
+    name: MATCH REPORT 62 - Android APK
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      flutter: stable
+    scripts:
+      - name: Generate Android project if needed
+        script: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --org fr.matchreport62 --project-name app .
+          fi
+      - name: Set the Firebase Android application ID
+        script: |
+          if [ -f android/app/build.gradle.kts ]; then
+            sed -i 's/namespace = ".*"/namespace = "fr.matchreport62.app"/' android/app/build.gradle.kts
+            sed -i 's/applicationId = ".*"/applicationId = "fr.matchreport62.app"/' android/app/build.gradle.kts
+          elif [ -f android/app/build.gradle ]; then
+            sed -i "s/namespace .*/namespace 'fr.matchreport62.app'/" android/app/build.gradle
+            sed -i "s/applicationId .*/applicationId 'fr.matchreport62.app'/" android/app/build.gradle
+          fi
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Build release APK
+        script: flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
